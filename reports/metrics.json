@@ -1,0 +1,68 @@
+{
+  "config": {
+    "seed": 42,
+    "n_customers": 4000,
+    "start_date": "2023-01-01",
+    "end_date": "2025-12-31",
+    "snapshot_start": "2024-01-01",
+    "snapshot_end": "2025-10-01",
+    "snapshot_frequency_days": 28,
+    "validation_start": "2025-01-01",
+    "test_start": "2025-07-01",
+    "scoring_date": "2025-11-01",
+    "min_history_orders": 3,
+    "target_horizon_days": 60,
+    "readiness_horizon_days": 30,
+    "categories": [
+      "Beauty",
+      "Electronics",
+      "Fashion",
+      "Grocery",
+      "Home",
+      "Sports"
+    ]
+  },
+  "dataset": {
+    "seed": 42,
+    "customers": 4000,
+    "transactions": 91154,
+    "snapshots": 91339,
+    "category_test_rows": 10015,
+    "test_start": "2025-07-01",
+    "scoring_customers": 3999
+  },
+  "selected_category_model": "hist_gradient_boosting",
+  "selected_readiness_model": "hist_gradient_boosting",
+  "category_validation": {
+    "top_1_hit_rate": 0.55334815913022,
+    "top_2_hit_rate": 0.7378304917222634,
+    "top_3_hit_rate": 0.8394366197183099,
+    "mean_reciprocal_rank": 0.7132674409027262,
+    "log_loss": 1.286700714578267,
+    "multiclass_brier_score": 0.6102426398926283
+  },
+  "readiness_validation": {
+    "average_precision": 0.7734367100454251,
+    "roc_auc": 0.7044075641611947,
+    "brier_score": 0.2148212510616616,
+    "log_loss": 0.6165572673266637,
+    "recall_at_top_20pct": 0.2823488045007032,
+    "lift_at_top_20pct": 1.411744022503516
+  },
+  "category_test": {
+    "top_1_hit_rate": 0.5419870194707939,
+    "top_2_hit_rate": 0.7328007988017973,
+    "top_3_hit_rate": 0.837044433349975,
+    "mean_reciprocal_rank": 0.7066749875187219,
+    "log_loss": 1.3080776030252896,
+    "multiclass_brier_score": 0.6221538305745838
+  },
+  "readiness_test": {
+    "average_precision": 0.7713846368269919,
+    "roc_auc": 0.7086499249751113,
+    "brier_score": 0.21326335700619484,
+    "log_loss": 0.6133753201247032,
+    "recall_at_top_20pct": 0.2845827439886846,
+    "lift_at_top_20pct": 1.4229137199434232
+  }
+}
