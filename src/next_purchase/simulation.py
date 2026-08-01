@@ -9,7 +9,6 @@ import pandas as pd
 
 from next_purchase.config import ProjectConfig
 
-
 CATEGORY_VALUE = {
     "Beauty": 55.0,
     "Electronics": 145.0,

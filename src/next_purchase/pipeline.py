@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import asdict
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from next_purchase.config import ProjectConfig

@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-
 COLORS = {
     "baseline": "#94A3B8",
     "model": "#0F766E",

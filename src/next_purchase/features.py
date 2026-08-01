@@ -7,7 +7,6 @@ import pandas as pd
 
 from next_purchase.config import ProjectConfig
 
-
 IDENTIFIER_COLUMNS = ["customer_id", "score_date"]
 LABEL_COLUMNS = [
     "purchase_within_30d",

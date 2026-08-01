@@ -15,7 +15,6 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from next_purchase.features import CATEGORICAL_FEATURES
 
-
 MODEL_NAMES = ("logistic_regression", "hist_gradient_boosting")
 
 
