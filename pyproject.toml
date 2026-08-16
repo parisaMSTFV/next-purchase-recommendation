@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "next-purchase-recommendation"
 version = "0.1.0"
-description = "Leakage-safe next-category recommendation and purchase-readiness case study"
+description = "Point-in-time next-category and purchase-readiness decisions with supplied-input scoring"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }

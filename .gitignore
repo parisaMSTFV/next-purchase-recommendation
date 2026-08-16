@@ -6,6 +6,7 @@ __pycache__/
 .coverage
 build/
 dist/
+artifacts/
 *.egg-info/
 .DS_Store
 

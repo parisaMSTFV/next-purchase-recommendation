@@ -2,19 +2,41 @@
 
 [![CI](https://github.com/parisaMSTFV/next-purchase-recommendation/actions/workflows/ci.yml/badge.svg)](https://github.com/parisaMSTFV/next-purchase-recommendation/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB)](https://www.python.org/)
-[![Data](https://img.shields.io/badge/data-100%25%20synthetic-0F766E)](DATA_PROVENANCE.md)
+[![Included data](https://img.shields.io/badge/included%20data-100%25%20synthetic-0F766E)](DATA_PROVENANCE.md)
 
-A reproducible customer-analytics case study that separates two decisions:
-**when** a customer is likely to purchase and **what category** is most likely
-to come next.
+A relevant recommendation sent at the wrong time is still a poor decision. This project separates
+purchase timing from category relevance, then combines them only when building a capacity-ranked
+review queue.
 
-The pipeline creates point-in-time customer snapshots, compares transparent
-baselines with two machine-learning models, evaluates them on a later untouched
-period, and produces a capacity-ranked activation queue for CRM or onsite
-personalization.
+| Decision | Executed synthetic evidence | Operational output |
+|---|---:|---|
+| **When** is a purchase likely? | Readiness AP `0.771` vs `0.658` cadence baseline | 30-day readiness score |
+| **What** category is relevant? | Top-3 hit rate `83.7%` vs `72.8%` last-category baseline | Three ranked categories |
+| **Who** enters limited capacity? | 599 of 3,999 eligible customers | `Priority`, `Review`, or `Monitor` |
 
-> All customers, transactions, values, margins, categories, and results are
-> synthetic. No employer data, schema, code, or business threshold is used.
+These evaluation results come only from the committed synthetic benchmark. They are not production
+performance or evidence that contacting a customer creates incremental behavior.
+
+![Ranked recommendation quality](reports/figures/top_k_performance.png)
+
+## Quick start with supplied transactions
+
+```bash
+python -m pip install -e ".[dev]"
+next-purchase score --transactions examples/supplied_transactions_v1.csv \
+  --provenance examples/supplied_provenance_v1.json --score-date 2025-06-01 \
+  --output-root artifacts/supplied-example
+```
+
+Inspect `artifacts/supplied-example/reports/recommendations.csv`, `activation_summary.csv`, and
+`run_metadata.json`. The example uses fictional identifiers and the outputs are ignored by Git.
+
+## Two modes, separate evidence
+
+| Mode | Input | Output | Evaluation boundary |
+|---|---|---|---|
+| `run` | Internally generated synthetic history | Fitted models, temporal metrics, and queue | Reported performance applies only to synthetic truth |
+| `score` | Versioned caller-supplied transactions and provenance | Transparent baseline queue and metadata | No fitted model, future label, synthetic truth, uplift, or performance metric |
 
 ## Business question
 
@@ -42,7 +64,7 @@ Every feature uses orders strictly before its score date. The readiness outcome
 looks 30 days forward. The next-category outcome uses the first purchase within
 60 days.
 
-## Validated results
+## Synthetic benchmark results
 
 The committed run uses 4,000 simulated customers, 91,154 transactions, 91,339
 historical score-date snapshots, and seed `42`.
@@ -60,8 +82,6 @@ historical score-date snapshots, and seed `42`.
 
 The selected next-category model improves Top-3 hit rate by 10.9 percentage
 points over repeating the customer's last category.
-
-![Ranked recommendation quality](reports/figures/top_k_performance.png)
 
 ### Model selection
 
@@ -128,12 +148,26 @@ flowchart TD
 - A leakage test changes future transactions and confirms that historical
   features remain identical.
 
+## Supplied-input contract
+
+The `score` mode accepts one completed-order CSV at schema version `1.0` plus a required provenance
+manifest. It validates identifiers, dates, numeric fields, category coverage, schema version,
+pseudonymization, and authorization metadata. Only transactions strictly before `score_date` enter
+the queue; later rows are counted and ignored.
+
+This mode uses a cadence readiness rule and a smoothed last-category rule. It does not silently
+apply a model fitted on the synthetic generator to external customers. The full field definitions,
+outputs, security boundary, and example command are in the
+[supplied-input contract](docs/supplied_input_contract_v1.md).
+
 ## Repository structure
 
 ```text
 src/next_purchase/       simulation, features, models, evaluation, decisions
 tests/                   leakage, metrics, queue, simulation, and pipeline tests
 docs/                    analysis plan, metric dictionary, model card, interview guide
+schemas/                 versioned supplied-input contract
+examples/                fictional transaction and provenance fixture
 reports/                 reproducible metrics, tables, figures, and decision note
 scripts/                 public-file sensitive-content check
 .github/workflows/       CI for Python 3.11 and 3.12
@@ -143,7 +177,7 @@ Generated row-level transactions and model snapshots are written to
 `data/generated/` and excluded from Git. Only compact aggregate reports and a
 30-row synthetic recommendation sample are committed.
 
-## Reproduce the project
+## Reproduce the synthetic benchmark
 
 Python 3.11 or later is required.
 
@@ -170,6 +204,7 @@ The complete pipeline regenerates all report tables and figures.
 - [Model card](docs/model_card.md)
 - [Interview guide](docs/interview_guide.md)
 - [Data provenance](DATA_PROVENANCE.md)
+- [Supplied-input contract v1.0](docs/supplied_input_contract_v1.md)
 - [Reproducible run summary](reports/run_summary.md)
 - [Decision note](reports/decision_note.md)
 - [Recommendation sample](reports/recommendations_sample.csv)
@@ -184,6 +219,8 @@ The complete pipeline regenerates all report tables and figures.
 - Historical category margin is not customer-level incremental value.
 - Production use requires point-in-time data controls, drift and calibration
   monitoring, inventory and eligibility rules, and controlled experiments.
+- Supplied-input mode is a transparent reference policy, not a substitute for
+  training and temporally evaluating models on an approved local dataset.
 
 ## License
 
