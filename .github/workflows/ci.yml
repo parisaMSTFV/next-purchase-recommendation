@@ -28,3 +28,10 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Check public files
         run: python scripts/check_sensitive.py
+      - name: Supplied-input smoke test
+        run: >-
+          python -m next_purchase.cli score
+          --transactions examples/supplied_transactions_v1.csv
+          --provenance examples/supplied_provenance_v1.json
+          --score-date 2025-06-01
+          --output-root /tmp/next-purchase-supplied

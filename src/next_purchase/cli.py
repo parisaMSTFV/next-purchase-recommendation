@@ -8,41 +8,56 @@ from pathlib import Path
 
 from next_purchase.config import ProjectConfig
 from next_purchase.pipeline import run_pipeline
+from next_purchase.supplied_input import score_supplied_transactions
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run the synthetic next-purchase recommendation case study."
+        description="Run the next-purchase benchmark or score validated supplied transactions."
     )
-    parser.add_argument(
-        "command",
-        choices=["run"],
-        help="Run data generation, training, evaluation, and scoring.",
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    run = subparsers.add_parser(
+        "run", help="run synthetic generation, training, evaluation, and scoring"
     )
-    parser.add_argument(
+    run.add_argument(
         "--project-root",
         default=".",
         help="Repository root where data and reports should be written.",
     )
-    parser.add_argument(
+    run.add_argument(
         "--customers",
         type=int,
         default=ProjectConfig.n_customers,
         help="Number of synthetic customers.",
     )
-    parser.add_argument(
+    run.add_argument(
         "--seed",
         type=int,
         default=ProjectConfig.seed,
         help="Random seed.",
     )
+    score = subparsers.add_parser(
+        "score", help="score a versioned supplied transaction history without model evaluation"
+    )
+    score.add_argument("--transactions", type=Path, required=True)
+    score.add_argument("--provenance", type=Path, required=True)
+    score.add_argument("--score-date", required=True)
+    score.add_argument("--output-root", type=Path, required=True)
     return parser
 
 
 def main() -> None:
     args = build_parser().parse_args()
-    config = ProjectConfig(n_customers=args.customers, seed=args.seed)
-    result = run_pipeline(Path(args.project_root), config)
+    if args.command == "score":
+        result = score_supplied_transactions(
+            transactions_path=args.transactions,
+            provenance_path=args.provenance,
+            score_date=args.score_date,
+            output_root=args.output_root,
+        )
+    else:
+        config = ProjectConfig(n_customers=args.customers, seed=args.seed)
+        result = run_pipeline(Path(args.project_root), config)
     print(json.dumps(result, indent=2))
 
 

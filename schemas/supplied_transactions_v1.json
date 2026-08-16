@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "format": "CSV",
+  "grain": "one completed order",
+  "required_columns": [
+    "order_id",
+    "customer_id",
+    "order_date",
+    "category",
+    "order_value",
+    "contribution_margin",
+    "used_discount",
+    "acquisition_channel",
+    "region"
+  ],
+  "point_in_time_rule": "Only rows strictly before score_date are used",
+  "identifier_rule": "Customer identifiers must be pseudonymized and direct identifiers are prohibited",
+  "evaluation_boundary": "This schema supports scoring only; it contains no future labels or synthetic truth"
+}
