@@ -4,7 +4,7 @@ install:
 	python -m pip install -e ".[dev]"
 
 run:
-	python -m next_purchase.cli run --project-root .
+	python -m next_purchase.cli run --project-root local-runs/latest
 
 score-example:
 	python -m next_purchase.cli score --transactions examples/supplied_transactions_v1.csv --provenance examples/supplied_provenance_v1.json --score-date 2025-06-01 --output-root artifacts/supplied-example

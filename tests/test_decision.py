@@ -35,6 +35,24 @@ class DecisionTests(unittest.TestCase):
         summary = activation_summary(queue)
         self.assertEqual(summary["customers"].sum(), n_rows)
 
+    def test_equal_scores_use_customer_id_as_a_stable_tie_break(self) -> None:
+        scoring = pd.DataFrame(
+            {
+                "customer_id": ["C003", "C001", "C002"],
+                "score_date": pd.Timestamp("2025-11-01"),
+            }
+        )
+        probabilities = np.tile(np.array([[0.5, 0.3, 0.2]]), (3, 1))
+        queue = build_activation_queue(
+            scoring,
+            probabilities,
+            np.full(3, 0.5),
+            ("Beauty", "Home", "Sports"),
+            expected_margin_by_category={"Beauty": 12.0, "Home": 18.0, "Sports": 15.0},
+        )
+
+        self.assertEqual(list(queue["customer_id"]), ["C001", "C002", "C003"])
+
 
 if __name__ == "__main__":
     unittest.main()

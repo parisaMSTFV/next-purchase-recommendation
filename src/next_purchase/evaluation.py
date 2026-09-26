@@ -27,7 +27,7 @@ def top_k_hit_rate(
     k: int,
 ) -> float:
     true_indices = _true_class_indices(y_true, class_order)
-    top_k = np.argsort(-probabilities, axis=1)[:, :k]
+    top_k = np.argsort(-probabilities, axis=1, kind="stable")[:, :k]
     return float(np.mean(np.any(top_k == true_indices[:, None], axis=1)))
 
 
@@ -37,7 +37,7 @@ def mean_reciprocal_rank(
     class_order: list[str] | tuple[str, ...],
 ) -> float:
     true_indices = _true_class_indices(y_true, class_order)
-    ranking = np.argsort(-probabilities, axis=1)
+    ranking = np.argsort(-probabilities, axis=1, kind="stable")
     ranks = np.argmax(ranking == true_indices[:, None], axis=1) + 1
     return float(np.mean(1.0 / ranks))
 
@@ -65,15 +65,9 @@ def category_metrics(
         "top_1_hit_rate": float(np.mean(predicted_indices == true_indices)),
         "top_2_hit_rate": top_k_hit_rate(y_true, probabilities, class_order, 2),
         "top_3_hit_rate": top_k_hit_rate(y_true, probabilities, class_order, 3),
-        "mean_reciprocal_rank": mean_reciprocal_rank(
-            y_true, probabilities, class_order
-        ),
-        "log_loss": float(
-            log_loss(y_true, probabilities, labels=list(class_order))
-        ),
-        "multiclass_brier_score": multiclass_brier_score(
-            y_true, probabilities, class_order
-        ),
+        "mean_reciprocal_rank": mean_reciprocal_rank(y_true, probabilities, class_order),
+        "log_loss": float(log_loss(y_true, probabilities, labels=list(class_order))),
+        "multiclass_brier_score": multiclass_brier_score(y_true, probabilities, class_order),
     }
 
 
@@ -112,12 +106,10 @@ def binary_metrics(y_true: pd.Series | np.ndarray, probability: np.ndarray) -> d
 
     observed = np.asarray(y_true, dtype=int)
     probability = np.asarray(probability, dtype=float)
-    order = np.argsort(-probability)
+    order = np.argsort(-probability, kind="stable")
     top_20_count = max(1, int(np.ceil(0.20 * len(observed))))
     positives = observed.sum()
-    recall_top_20 = (
-        float(observed[order[:top_20_count]].sum() / positives) if positives else 0.0
-    )
+    recall_top_20 = float(observed[order[:top_20_count]].sum() / positives) if positives else 0.0
     base_rate = float(observed.mean())
     precision_top_20 = float(observed[order[:top_20_count]].mean())
     lift_top_20 = precision_top_20 / base_rate if base_rate else 0.0

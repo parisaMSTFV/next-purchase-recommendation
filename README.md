@@ -173,9 +173,9 @@ scripts/                 public-file sensitive-content check
 .github/workflows/       CI for Python 3.11 and 3.12
 ```
 
-Generated row-level transactions and model snapshots are written to
-`data/generated/` and excluded from Git. Only compact aggregate reports and a
-30-row synthetic recommendation sample are committed.
+Generated row-level transactions, model snapshots, and reports from routine runs are written under
+the ignored `local-runs/latest` directory. The checked-in aggregate reports and 30-row synthetic
+recommendation sample remain unchanged unless they are intentionally regenerated for review.
 
 ## Reproduce the synthetic benchmark
 
@@ -195,7 +195,7 @@ On Windows PowerShell, activate the environment with:
 .venv\Scripts\Activate.ps1
 ```
 
-The complete pipeline regenerates all report tables and figures.
+The complete pipeline writes report tables and figures to `local-runs/latest`.
 
 ## Documentation
 
