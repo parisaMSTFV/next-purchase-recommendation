@@ -28,7 +28,7 @@ The machine-readable contract is in [`schemas/supplied_transactions_v1.json`](..
 |---|---|
 | `order_id` | Unique, non-blank pseudonymous order key |
 | `customer_id` | Non-blank pseudonymous customer key |
-| `order_date` | Valid ISO-8601 date |
+| `order_date` | Valid `YYYY-MM-DD` date without a time or timezone |
 | `category` | Non-blank category label; at least three historical categories are required |
 | `order_value` | Finite number greater than or equal to zero |
 | `contribution_margin` | Finite number; negative values are allowed |
@@ -38,7 +38,7 @@ The machine-readable contract is in [`schemas/supplied_transactions_v1.json`](..
 
 Extra columns are ignored. Formula-prefixed identifiers are rejected. Only transactions strictly
 before `score_date` enter features, category distributions, and expected margins; later rows are
-counted in metadata and ignored.
+counted in metadata and ignored. `score_date` must also be a date without a time or timezone.
 
 ## Policy and outputs
 

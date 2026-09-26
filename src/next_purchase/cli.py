@@ -21,8 +21,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     run.add_argument(
         "--project-root",
-        default=".",
-        help="Repository root where data and reports should be written.",
+        default="local-runs/latest",
+        help="Output root; defaults to an ignored local-run directory.",
     )
     run.add_argument(
         "--customers",

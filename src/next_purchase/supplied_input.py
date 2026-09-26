@@ -80,6 +80,10 @@ def load_provenance(path: Path) -> dict[str, Any]:
     for field in ("source_name", "source_type", "license_or_authorization"):
         if not isinstance(raw[field], str) or not raw[field].strip():
             raise SuppliedInputError(f"Provenance field {field!r} must be a non-blank string")
+        if raw[field].strip().startswith(("=", "+", "-", "@")):
+            raise SuppliedInputError(
+                f"Provenance field {field!r} contains a spreadsheet-formula prefix"
+            )
     if raw["identifiers_pseudonymized"] is not True:
         raise SuppliedInputError("Supplied customer identifiers must be pseudonymized")
     if raw["contains_direct_identifiers"] is not False:
@@ -102,7 +106,7 @@ def load_transactions(path: Path) -> pd.DataFrame:
         raise SuppliedInputError(f"Transaction file does not exist: {path}")
     try:
         frame = pd.read_csv(path)
-    except (pd.errors.EmptyDataError, pd.errors.ParserError) as error:
+    except (OSError, UnicodeError, pd.errors.EmptyDataError, pd.errors.ParserError) as error:
         raise SuppliedInputError(
             "Transaction input must be a readable CSV with a header"
         ) from error
@@ -122,10 +126,13 @@ def load_transactions(path: Path) -> pd.DataFrame:
     if clean["category"].str.casefold().nunique() != clean["category"].nunique():
         raise SuppliedInputError("Category names must be unique after case folding")
 
-    parsed_dates = pd.to_datetime(clean["order_date"], errors="coerce", utc=True)
+    date_text = _clean_identifier(clean["order_date"], "order_date")
+    if not date_text.str.fullmatch(r"\d{4}-\d{2}-\d{2}").all():
+        raise SuppliedInputError("order_date must use YYYY-MM-DD without a time or timezone")
+    parsed_dates = pd.to_datetime(date_text, format="%Y-%m-%d", errors="coerce")
     if parsed_dates.isna().any():
         raise SuppliedInputError("order_date must contain valid ISO-8601 dates")
-    clean["order_date"] = parsed_dates.dt.tz_convert(None).dt.normalize()
+    clean["order_date"] = parsed_dates
     for field in ("order_value", "contribution_margin", "used_discount"):
         clean[field] = pd.to_numeric(clean[field], errors="coerce")
         if clean[field].isna().any() or not np.isfinite(clean[field].to_numpy(dtype=float)).all():
@@ -147,7 +154,16 @@ def score_supplied_transactions(
     """Create a transparent queue from supplied history without fitted-model evaluation."""
     provenance = load_provenance(provenance_path)
     transactions = load_transactions(transactions_path)
-    score_timestamp = pd.Timestamp(score_date).normalize()
+    try:
+        score_timestamp = pd.Timestamp(score_date)
+    except (TypeError, ValueError) as error:
+        raise SuppliedInputError("score_date must be a valid date") from error
+    if (
+        pd.isna(score_timestamp)
+        or score_timestamp.tzinfo is not None
+        or score_timestamp != score_timestamp.normalize()
+    ):
+        raise SuppliedInputError("score_date must contain a date without a time or timezone")
     history = transactions.loc[transactions["order_date"] < score_timestamp].copy()
     if history.empty:
         raise SuppliedInputError("No transactions occur before score_date")

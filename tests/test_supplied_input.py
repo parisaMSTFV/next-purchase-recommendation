@@ -47,6 +47,25 @@ class SuppliedInputTests(unittest.TestCase):
             with self.assertRaisesRegex(SuppliedInputError, "order_id must be unique"):
                 load_transactions(path)
 
+    def test_order_timestamp_is_not_silently_truncated(self) -> None:
+        frame = pd.read_csv(self.transactions)
+        frame.loc[0, "order_date"] = "2025-01-01T23:00:00Z"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "transactions.csv"
+            frame.to_csv(path, index=False)
+            with self.assertRaisesRegex(SuppliedInputError, "without a time or timezone"):
+                load_transactions(path)
+
+    def test_score_date_requires_a_date_without_time(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(SuppliedInputError, "without a time or timezone"):
+                score_supplied_transactions(
+                    self.transactions,
+                    self.provenance,
+                    "2025-06-01T12:00:00",
+                    Path(directory),
+                )
+
     def test_supplied_scoring_writes_outputs_without_evaluation_metrics(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             output_root = Path(directory) / "output"

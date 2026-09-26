@@ -85,9 +85,7 @@ def _category_candidates(
         )
         for candidate, candidate_probability in probabilities.items()
     }
-    comparison = pd.DataFrame(
-        [{"candidate": name, **values} for name, values in metrics.items()]
-    )
+    comparison = pd.DataFrame([{"candidate": name, **values} for name, values in metrics.items()])
     return comparison, metrics
 
 
@@ -117,17 +115,16 @@ def _readiness_candidates(
         )
         for candidate, candidate_probability in probabilities.items()
     }
-    comparison = pd.DataFrame(
-        [{"candidate": name, **values} for name, values in metrics.items()]
-    )
+    comparison = pd.DataFrame([{"candidate": name, **values} for name, values in metrics.items()])
     return comparison, metrics
 
 
 def _select_category_model(comparison: pd.DataFrame) -> str:
     candidates = comparison.loc[comparison["candidate"].isin(MODEL_NAMES)].copy()
     candidates = candidates.sort_values(
-        ["top_3_hit_rate", "log_loss"],
-        ascending=[False, True],
+        ["top_3_hit_rate", "log_loss", "candidate"],
+        ascending=[False, True, True],
+        kind="stable",
     )
     return str(candidates.iloc[0]["candidate"])
 
@@ -135,8 +132,9 @@ def _select_category_model(comparison: pd.DataFrame) -> str:
 def _select_readiness_model(comparison: pd.DataFrame) -> str:
     candidates = comparison.loc[comparison["candidate"].isin(MODEL_NAMES)].copy()
     candidates = candidates.sort_values(
-        ["average_precision", "brier_score"],
-        ascending=[False, True],
+        ["average_precision", "brier_score", "candidate"],
+        ascending=[False, True, True],
+        kind="stable",
     )
     return str(candidates.iloc[0]["candidate"])
 
@@ -237,9 +235,7 @@ def run_pipeline(
         scoring_frame[features],
         categories,
     )
-    readiness_scoring_probability = readiness_model.predict_proba(
-        scoring_frame[features]
-    )[:, 1]
+    readiness_scoring_probability = readiness_model.predict_proba(scoring_frame[features])[:, 1]
     historical_margin = (
         transactions.loc[transactions["order_date"] < pd.Timestamp(config.scoring_date)]
         .groupby("category")["contribution_margin"]

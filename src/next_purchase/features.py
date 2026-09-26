@@ -54,10 +54,10 @@ def _feature_row(
 ) -> dict[str, object]:
     history = history.sort_values("order_date")
     last_order = history.iloc[-1]
-    window_start = score_date - pd.Timedelta(days=365)
+    window_start = score_date - pd.to_timedelta(365, unit="D")
     history_365 = history.loc[history["order_date"] >= window_start]
-    history_90 = history.loc[history["order_date"] >= score_date - pd.Timedelta(days=90)]
-    history_30 = history.loc[history["order_date"] >= score_date - pd.Timedelta(days=30)]
+    history_90 = history.loc[history["order_date"] >= score_date - pd.to_timedelta(90, unit="D")]
+    history_30 = history.loc[history["order_date"] >= score_date - pd.to_timedelta(30, unit="D")]
 
     average_gap, gap_std = _safe_mean_gap(history["order_date"])
     recency_days = int((score_date - last_order["order_date"]).days)
@@ -90,9 +90,7 @@ def _feature_row(
         "average_order_value_365d": float(history_365["order_value"].mean()),
         "total_margin_365d": float(history_365["contribution_margin"].sum()),
         "discount_share_365d": float(history_365["used_discount"].mean()),
-        "weekend_share_365d": float(
-            (history_365["order_date"].dt.dayofweek >= 5).mean()
-        ),
+        "weekend_share_365d": float((history_365["order_date"].dt.dayofweek >= 5).mean()),
         "category_diversity_365d": int(history_365["category"].nunique()),
         "favorite_category_share_365d": favorite_share,
         "average_gap_days": average_gap,
@@ -111,9 +109,7 @@ def _feature_row(
         row[f"{feature_key}_orders_365d"] = count
         row[f"{feature_key}_share_365d"] = float(count / len(history_365))
         if count:
-            category_recency = int(
-                (score_date - category_history.iloc[-1]["order_date"]).days
-            )
+            category_recency = int((score_date - category_history.iloc[-1]["order_date"]).days)
         else:
             category_recency = 400
         row[f"{feature_key}_recency_days"] = category_recency
@@ -157,7 +153,7 @@ def build_labeled_snapshots(
     score_dates = [
         date
         for date in score_dates
-        if date + pd.Timedelta(days=config.target_horizon_days) <= data_end
+        if date + pd.to_timedelta(config.target_horizon_days, unit="D") <= data_end
     ]
 
     rows: list[dict[str, object]] = []
@@ -189,13 +185,10 @@ def build_labeled_snapshots(
                 next_order = None
                 days_to_next = config.target_horizon_days + 1
 
-            row["purchase_within_30d"] = int(
-                0 <= days_to_next <= config.readiness_horizon_days
-            )
+            row["purchase_within_30d"] = int(0 <= days_to_next <= config.readiness_horizon_days)
             row["next_category"] = (
                 str(next_order["category"])
-                if next_order is not None
-                and 0 <= days_to_next <= config.target_horizon_days
+                if next_order is not None and 0 <= days_to_next <= config.target_horizon_days
                 else None
             )
             row["days_to_next_purchase"] = (
@@ -261,8 +254,7 @@ def split_by_time(
     test_start = pd.Timestamp(config.test_start)
     train = snapshots.loc[snapshots["score_date"] < validation_start].copy()
     validation = snapshots.loc[
-        (snapshots["score_date"] >= validation_start)
-        & (snapshots["score_date"] < test_start)
+        (snapshots["score_date"] >= validation_start) & (snapshots["score_date"] < test_start)
     ].copy()
     test = snapshots.loc[snapshots["score_date"] >= test_start].copy()
 

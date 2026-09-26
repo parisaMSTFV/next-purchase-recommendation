@@ -107,14 +107,14 @@ def generate_transactions(config: ProjectConfig) -> pd.DataFrame:
         preference = preference / preference.sum()
 
         customer_value_multiplier = float(rng.lognormal(mean=0.0, sigma=0.28))
-        current_date = start + pd.Timedelta(days=int(rng.integers(0, 150)))
+        current_date = start + pd.to_timedelta(int(rng.integers(0, 150)), unit="D")
         last_category: str | None = None
 
         while current_date <= end:
             progress = min(max((current_date - start).days / total_days, 0.0), 1.0)
             mean_gap = _mean_gap(shopper_type, progress)
             gap = max(4, int(round(rng.gamma(shape=3.2, scale=mean_gap / 3.2))))
-            current_date += pd.Timedelta(days=gap)
+            current_date += pd.to_timedelta(gap, unit="D")
             if current_date > end:
                 break
 

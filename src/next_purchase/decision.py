@@ -15,7 +15,7 @@ def build_activation_queue(
 ) -> pd.DataFrame:
     """Create a capacity-ranked queue without claiming incremental campaign impact."""
 
-    ranking = np.argsort(-category_probabilities, axis=1)
+    ranking = np.argsort(-category_probabilities, axis=1, kind="stable")
     category_array = np.asarray(categories)
     top_categories = category_array[ranking[:, :3]]
 
@@ -45,8 +45,9 @@ def build_activation_queue(
     )
 
     queue = queue.sort_values(
-        ["action_score", "purchase_readiness_30d"],
-        ascending=False,
+        ["action_score", "purchase_readiness_30d", "customer_id"],
+        ascending=[False, False, True],
+        kind="stable",
     ).reset_index(drop=True)
     percentile = (np.arange(len(queue)) + 1) / len(queue)
     queue["capacity_tier"] = np.select(
